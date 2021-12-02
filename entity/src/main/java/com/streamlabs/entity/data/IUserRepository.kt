@@ -19,4 +19,11 @@ interface IUserRepository {
      * @return list of users
      */
     suspend fun fetchUsers(ids: List<String>): List<User>
+
+    /**
+     * Fetches user from network by [id] and store it to cache
+     * @throws EntityError.kt in case of any errors (including HTTP errors)
+     * @return list of users
+     */
+    suspend fun fetchUser(id: String): User?
 }

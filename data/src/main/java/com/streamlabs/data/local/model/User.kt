@@ -1,6 +1,6 @@
-package com.streamlabs.entity.model
+package com.streamlabs.data.local.model
 
-data class User(
+internal data class User(
     val id: String?,
     val userName: String?,
     val userTitle: String?,
