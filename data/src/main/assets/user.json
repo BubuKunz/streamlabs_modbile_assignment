@@ -1,0 +1,9 @@
+{
+  "user_name": "@username",
+  "user_title": "Test Name",
+  "user_local_image": "user_photo",
+  "user_videos": 10,
+  "user_following": 42,
+  "user_fans": 42,
+  "user_hearts": 42
+}
