@@ -5,12 +5,14 @@ import android.util.Log
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.streamlabs.data.BuildConfig
 import com.streamlabs.entity.error.AuthError
 import com.streamlabs.entity.error.GenericError
 import com.streamlabs.entity.error.NetworkError
 import java.util.concurrent.TimeUnit
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -29,10 +31,18 @@ internal object NetworkUtils {
     private fun provideHttpClient(
         context: Context,
     ): OkHttpClient {
-        return OkHttpClient.Builder()
+
+        val builder = OkHttpClient.Builder()
             .addInterceptor(AssetsInterceptor(context))
             .connectTimeout(60, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
+        if (BuildConfig.DEBUG) {
+            val loginInterception = HttpLoggingInterceptor()
+            loginInterception.level = HttpLoggingInterceptor.Level.BODY
+            builder.addInterceptor(loginInterception)
+        }
+
+        return builder
             .build()
     }
 
@@ -48,7 +58,7 @@ internal object NetworkUtils {
         val retrofit = Retrofit.Builder()
             .client(provideHttpClient(context))
             .addConverterFactory(GsonConverterFactory.create(gson))
-            .baseUrl("com.mobile.assignment")
+            .baseUrl("http://com.mobile.assignment")
             .build()
         return retrofit.create(WebService::class.java)
     }

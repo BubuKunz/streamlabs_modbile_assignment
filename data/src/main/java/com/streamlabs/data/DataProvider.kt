@@ -40,7 +40,7 @@ class DataProvider(appContext: Context) {
     private val apiVideoMapper = ApiVideoMapper()
     private val apiUserMapper = ApiUserMapper()
 
-    val vidRepository: IVideoRepository = VideoRepository(
+    val videoRepository: IVideoRepository = VideoRepository(
         videosLocalDataHolder,
         videosRemoteDataHolder,
     )

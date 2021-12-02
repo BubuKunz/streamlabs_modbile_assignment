@@ -20,8 +20,8 @@ class AssetsInterceptor(appContext: Context) : Interceptor {
             else -> ""
         }
 
-        return chain.proceed(chain.request())
-            .newBuilder()
+        val response = Response.Builder()
+            .request(chain.request())
             .code(200)
             .protocol(Protocol.HTTP_2)
             .message(responseString)
@@ -33,6 +33,7 @@ class AssetsInterceptor(appContext: Context) : Interceptor {
             )
             .addHeader("content-type", "application/json")
             .build()
+        return response
     }
 
     fun String.loadJSONFromAsset(): String? {
