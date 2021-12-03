@@ -7,21 +7,19 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.SnapHelper
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSource
+import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
+import com.google.android.exoplayer2.source.MediaSourceFactory
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.streamlabs.test.R
 import com.streamlabs.test.VMFactory
 import com.streamlabs.test.databinding.FragmentVideosFeedBinding
-import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
-
-import com.google.android.exoplayer2.source.MediaSourceFactory
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
-import okhttp3.Cache
 import okhttp3.OkHttpClient
-import okhttp3.Response
 
 class VideoFeedFragment : Fragment(R.layout.fragment_videos_feed) {
     private val playbackStateListener: Player.EventListener = playbackStateListener()
@@ -32,7 +30,7 @@ class VideoFeedFragment : Fragment(R.layout.fragment_videos_feed) {
     private var currentWindow = 0
     private var playbackPosition = 0L
     private val adapter by lazy {
-        VideosAdapter(player, requireContext())
+        VideosAdapter(player)
     }
 
     private fun initializePlayer(): ExoPlayer {
@@ -45,10 +43,10 @@ class VideoFeedFragment : Fragment(R.layout.fragment_videos_feed) {
 
         return ExoPlayer.Builder(requireContext())
             .setTrackSelector(trackSelector)
-//            .setMediaSourceFactory(mediaSourceFactory)
+            .setMediaSourceFactory(mediaSourceFactory)
             .build().also {
-            it.addListener(playbackStateListener)
-        }
+                it.addListener(playbackStateListener)
+            }
     }
 
     private fun releasePlayer() {
@@ -60,6 +58,16 @@ class VideoFeedFragment : Fragment(R.layout.fragment_videos_feed) {
             release()
         }
 //        player = null
+    }
+
+    override fun onStop() {
+        player.stop()
+        super.onStop()
+    }
+
+    override fun onDestroy() {
+        releasePlayer()
+        super.onDestroy()
     }
 
     private lateinit var binding: FragmentVideosFeedBinding
@@ -82,11 +90,27 @@ class VideoFeedFragment : Fragment(R.layout.fragment_videos_feed) {
         val snapHelper: SnapHelper = PagerSnapHelper()
         snapHelper.attachToRecyclerView(binding.recyclerView)
         binding.recyclerView.adapter = adapter
+        var position = 0
+        binding.recyclerView.setOnScrollChangeListener { v, scrollX, scrollY, oldScrollX, oldScrollY ->
+            var newPosition =
+                (binding.recyclerView.layoutManager as LinearLayoutManager).findFirstCompletelyVisibleItemPosition()
+            if (position != newPosition) {
+                // todo fix playbackPosition detecting
+                viewModel.onIntent(
+                    Intent.PlayPositionChanged(
+                        newPosition,
+                        position,
+                        player.contentPosition
+                    )
+                )
+                position = newPosition
+            }
+        }
         with(viewModel) {
             onIntent(Intent.LoadVideos)
             stateObservable.observe(this@VideoFeedFragment) {
                 when (it) {
-                    is State.Data -> adapter.submit(it.videos)
+                    is State.Data -> adapter.submitList(it.videos)
                 }
             }
         }
